@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CropSense AI | फसल सलाहकार | ಬೆಳೆ ಸಲಹೆ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --green: #2d6a2d;
+    --green-light: #e8f5e9;
+    --green-mid: #4caf50;
+    --green-dark: #1b5e20;
+    --amber: #f57f17;
+    --amber-light: #fff8e1;
+    --red: #c62828;
+    --red-light: #ffebee;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e0e0e0;
+    --white: #fff;
+    --bg: #f4f6f1;
+  }
+
+  body {
+    font-family: 'Baloo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  header {
+    background: var(--green-dark);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: var(--green-mid);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .logo-text h1 { color: #fff; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+  .logo-text p { color: #a5d6a7; font-size: 0.7rem; font-family: 'Noto Sans Devanagari', sans-serif; }
+
+  .team-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    color: #c8e6c9;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  main { padding: 16px; }
+
+  /* ---- STEP INDICATOR ---- */
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .step-dot.active { background: var(--green-mid); color: #fff; }
+  .step-dot.done { background: var(--green-dark); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: var(--border); max-width: 40px; }
+  .step-line.done { background: var(--green-dark); }
+
+  /* ---- CARDS ---- */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ---- CAMERA / UPLOAD ---- */
+  .photo-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .photo-btn {
+    border: 2px dashed #b0bec5;
+    border-radius: 12px;
+    padding: 20px 10px;
+    text-align: center;
+    cursor: pointer;
+    background: #fafafa;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .photo-btn:hover, .photo-btn:active { border-color: var(--green-mid); background: var(--green-light); }
+  .photo-btn input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .photo-btn .btn-icon { font-size: 28px; display: block; margin-bottom: 4px; }
+  .photo-btn .btn-label { font-size: 0.8rem; font-weight: 600; color: var(--green-dark); display: block; }
+  .photo-btn .btn-sub { font-size: 0.68rem; color: var(--text-muted); font-family: 'Noto Sans Devanagari', sans-serif; }
+
+  #preview-box { display: none; border-radius: 12px; overflow: hidden; border: 2px solid var(--green-mid); position: relative; }
+  #preview-img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+  .preview-tag {
+    position: absolute; bottom: 8px; left: 8px;
+    background: var(--green-dark); color: #fff;
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+  }
+  .change-btn {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(0,0,0,0.6); color: #fff;
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    cursor: pointer; border: none; font-family: 'Baloo 2', sans-serif;
+  }
+
+  /* ---- LANGUAGE ---- */
+  .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .lang-btn {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    font-family: 'Baloo 2', sans-serif;
+  }
+  .lang-btn:active { transform: scale(0.97); }
+  .lang-btn.active { border-color: var(--green-dark); background: var(--green-light); }
+  .lang-btn .lang-flag { font-size: 22px; display: block; margin-bottom: 4px; }
+  .lang-btn .lang-name { font-size: 1rem; font-weight: 700; color: var(--green-dark); display: block; }
+  .lang-btn .lang-sub { font-size: 0.7rem; color: var(--text-muted); font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
+
+  /* ---- ANALYZE BUTTON ---- */
+  .analyze-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--green-dark);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Baloo 2', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+  }
+  .analyze-btn:active:not(:disabled) { transform: scale(0.98); background: var(--green); }
+  .analyze-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .analyze-btn .btn-main { display: block; font-size: 1.1rem; }
+  .analyze-btn .btn-sub { display: block; font-size: 0.72rem; font-weight: 400; opacity: 0.85; margin-top: 2px; font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
+
+  /* ---- LOADING ---- */
+  #loading { display: none; text-align: center; padding: 32px 16px; background: var(--white); border-radius: 16px; margin-bottom: 12px; }
+  .spinner { width: 48px; height: 48px; border: 4px solid var(--green-light); border-top-color: var(--green-mid); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-main { font-size: 1rem; font-weight: 600; color: var(--green-dark); }
+  .loading-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-family: 'Noto Sans Devanagari', sans-serif; }
+  .loading-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+  @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+
+  /* ---- RESULT ---- */
+  #result-box { display: none; }
+
+  .severity-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .severity-low { background: var(--green-light); }
+  .severity-medium { background: var(--amber-light); }
+  .severity-high { background: var(--red-light); }
+
+  .severity-icon { font-size: 24px; }
+  .severity-info { flex: 1; }
+  .severity-title { font-size: 0.9rem; font-weight: 700; }
+  .severity-title.low { color: var(--green-dark); }
+  .severity-title.medium { color: var(--amber); }
+  .severity-title.high { color: var(--red); }
+  .severity-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+  .advisory-box {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    border-left: 4px solid var(--green-mid);
+    margin-bottom: 12px;
+    font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', 'Baloo 2', sans-serif;
+  }
+
+  /* ---- AUDIO ---- */
+  .audio-card {
+    background: var(--green-dark);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .audio-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .audio-icon { font-size: 24px; }
+  .audio-info { flex: 1; }
+  .audio-title { color: #fff; font-size: 0.9rem; font-weight: 700; }
+  .audio-sub { color: #a5d6a7; font-size: 0.72rem; font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
+
+  .play-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--green-mid);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Baloo 2', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .play-btn:active { transform: scale(0.97); background: #388e3c; }
+  .play-btn .play-sub { font-size: 0.7rem; font-weight: 400; opacity: 0.9; font-family: 'Noto Sans Devanagari', 'Noto Sans Kannada', sans-serif; }
+
+  /* ---- SWITCH LANGUAGE IN RESULT ---- */
+  .switch-lang-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .switch-btn {
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #fafafa;
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .switch-btn.active { border-color: var(--green-dark); background: var(--green-light); color: var(--green-dark); }
+
+  /* ---- RESET ---- */
+  .reset-btn {
+    width: 100%; padding: 12px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-family: 'Baloo 2', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+  }
+  .reset-btn:active { border-color: var(--green-mid); color: var(--green-dark); }
+
+  /* ---- ERROR ---- */
+  .error-box {
+    display: none; background: var(--red-light);
+    border: 1px solid #ef9a9a; border-radius: 10px;
+    padding: 12px 14px; color: var(--red);
+    font-size: 0.85rem; margin-bottom: 12px;
+  }
+
+  footer {
+    text-align: center; padding: 20px 16px;
+    font-size: 0.72rem; color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">🌾</div>
+  <div class="logo-text">
+    <h1>CropSense AI</h1>
+    <p>फसल सलाहकार • ಬೆಳೆ ಸಲಹೆಗಾರ</p>
+  </div>
+  <div class="team-badge">Techno Squad<br>Solution Challenge</div>
+</header>
+
+<main>
+
+  <div class="steps" id="steps">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3">3</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" id="dot4">4</div>
+  </div>
+
+  <!-- STEP 1: PHOTO -->
+  <div class="card" id="photo-card">
+    <div class="card-label">📷 Step 1 — फोटो लो • ಫೋಟೋ ತೆಗೆಯಿರಿ • Take Photo</div>
+    <div class="photo-actions" id="photo-actions">
+      <div class="photo-btn">
+        <input type="file" accept="image/*" capture="environment" id="camera-input">
+        <span class="btn-icon">📸</span>
+        <span class="btn-label">Camera</span>
+        <span class="btn-sub">अभी फोटो लो<br>ಈಗ ಫೋಟೋ ತೆಗೆಯಿರಿ</span>
+      </div>
+      <div class="photo-btn">
+        <input type="file" accept="image/*" id="gallery-input">
+        <span class="btn-icon">🖼️</span>
+        <span class="btn-label">Gallery</span>
+        <span class="btn-sub">फोटो चुनो<br>ಗ್ಯಾಲರಿಯಿಂದ ಆಯ್ಕೆ</span>
+      </div>
+    </div>
+    <div id="preview-box">
+      <img id="preview-img" src="" alt="Crop photo">
+      <span class="preview-tag">✓ Photo ready</span>
+      <button class="change-btn" onclick="changePhoto()">Change</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: LANGUAGE -->
+  <div class="card">
+    <div class="card-label">🗣️ Step 2 — भाषा चुनो • ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ • Choose Language</div>
+    <div class="lang-grid">
+      <button class="lang-btn active" id="lang-hi" onclick="selectLang('hi')">
+        <span class="lang-flag">🇮🇳</span>
+        <span class="lang-name">हिंदी</span>
+        <span class="lang-sub">Hindi</span>
+      </button>
+      <button class="lang-btn" id="lang-kn" onclick="selectLang('kn')">
+        <span class="lang-flag">🌻</span>
+        <span class="lang-name">ಕನ್ನಡ</span>
+        <span class="lang-sub">Kannada</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ANALYZE BUTTON -->
+  <button class="analyze-btn" id="analyze-btn" onclick="analyze()">
+    <span class="btn-main">🔍 Analyze My Crop</span>
+    <span class="btn-sub">फसल की जांच करो • ಬೆಳೆಯನ್ನು ಪರಿಶೀಲಿಸಿ</span>
+  </button>
+
+  <!-- ERROR -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- LOADING -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="loading-main">AI is analyzing your crop<span class="loading-dots"></span></div>
+    <div class="loading-sub">थोड़ा रुको • ಸ್ವಲ್ಪ ತಡೆಯಿರಿ • Please wait</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-box">
+
+    <div class="card-label" style="padding: 0 2px; margin-bottom: 8px;">✅ Result — फसल की जानकारी • ಬೆಳೆಯ ಮಾಹಿತಿ</div>
+
+    <div id="severity-bar" class="severity-bar severity-low">
+      <span class="severity-icon" id="severity-icon">✅</span>
+      <div class="severity-info">
+        <div class="severity-title low" id="severity-title">Low Severity</div>
+        <div class="severity-sub" id="severity-sub">फसल ठीक है • ಬೆಳೆ ಚೆನ್ನಾಗಿದೆ</div>
+      </div>
+    </div>
+
+    <!-- Switch language in result -->
+    <div class="switch-lang-row">
+      <button class="switch-btn active" id="sw-hi" onclick="switchResultLang('hi')">🇮🇳 हिंदी</button>
+      <button class="switch-btn" id="sw-kn" onclick="switchResultLang('kn')">🌻 ಕನ್ನಡ</button>
+    </div>
+
+    <div class="advisory-box" id="advisory-text"></div>
+
+    <div class="audio-card">
+      <div class="audio-top">
+        <span class="audio-icon">🔊</span>
+        <div class="audio-info">
+          <div class="audio-title">Voice Advisory</div>
+          <div class="audio-sub" id="audio-lang-label">सुनो • ಕೇಳಿ • Listen</div>
+        </div>
+      </div>
+      <button class="play-btn" id="play-btn" onclick="playAudio()">
+        <span>▶ Play Advisory</span>
+        <span class="play-sub">सुनो • ಕೇಳಿ</span>
+      </button>
+    </div>
+
+    <button class="reset-btn" onclick="reset()">
+      🔄 New Photo • नई फोटो • ಹೊಸ ಫೋಟೋ
+    </button>
+  </div>
+
+</main>
+
+<footer>
+  <strong>CropSense AI</strong> — Team Techno Squad<br>
+  Google Solution Challenge 2026 • Made for Indian Farmers 🌾<br>
+  भारत के किसानों के लिए • ಭಾರತೀಯ ರೈತರಿಗಾಗಿ
+</footer>
+
+<script>
+// ---- CONFIG ----
+const SERVER_URL = "https://audition-dismount-delighted.ngrok-free.dev";
+
+// ---- STATE ----
+let selectedLang = 'hi';
+let imageFile = null;
+let resultData = null;
+let audioBlob = null;
+let currentAudio = null;
+
+// ---- PHOTO INPUT ----
+document.getElementById('camera-input').addEventListener('change', handleFile);
+document.getElementById('gallery-input').addEventListener('change', handleFile);
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('preview-img').src = url;
+  document.getElementById('preview-box').style.display = 'block';
+  document.getElementById('photo-actions').style.display = 'none';
+  setStep(2);
+}
+
+function changePhoto() {
+  imageFile = null;
+  document.getElementById('preview-box').style.display = 'none';
+  document.getElementById('photo-actions').style.display = 'grid';
+  document.getElementById('camera-input').value = '';
+  document.getElementById('gallery-input').value = '';
+  setStep(1);
+}
+
+// ---- LANGUAGE ----
+function selectLang(lang) {
+  selectedLang = lang;
+  document.getElementById('lang-hi').classList.toggle('active', lang === 'hi');
+  document.getElementById('lang-kn').classList.toggle('active', lang === 'kn');
+}
+
+// ---- STEP INDICATOR ----
+function setStep(step) {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    if (i < step) { dot.className = 'step-dot done'; dot.textContent = '✓'; }
+    else if (i === step) { dot.className = 'step-dot active'; dot.textContent = i; }
+    else { dot.className = 'step-dot'; dot.textContent = i; }
+    if (i < 4) {
+      document.getElementById('line' + i).className = 'step-line' + (i < step ? ' done' : '');
+    }
+  }
+}
+
+// ---- ANALYZE ----
+async function analyze() {
+  if (!imageFile) { showError('Please take or upload a crop photo first!\nपहले फोटो लो • ಮೊದಲು ಫೋಟೋ ತೆಗೆಯಿರಿ'); return; }
+
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('analyze-btn').disabled = true;
+  setStep(3);
+
+  try {
+    // Convert image to base64
+    const base64 = await toBase64(imageFile);
+
+    const response = await fetch(SERVER_URL + '/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      },
+      body: JSON.stringify({
+        image: base64,
+        lang: selectedLang
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || 'Server error');
+
+    resultData = data;
+
+    // Decode audio
+    const audioBytes = base64ToBytes(data.audio_b64);
+    audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+
+    // Show result
+    showResult(data, selectedLang);
+    setStep(4);
+
+  } catch (err) {
+    showError('Error: ' + err.message + '\nकुछ गलत हुआ • ದೋಷ ಉಂಟಾಯಿತು\nMake sure server is running!');
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('analyze-btn').disabled = false;
+  }
+}
+
+function showResult(data, lang) {
+  // Severity
+  const sev = data.severity || 'low';
+  const sevBar = document.getElementById('severity-bar');
+  sevBar.className = 'severity-bar severity-' + sev;
+  const icons = { low: '✅', medium: '⚠️', high: '🚨' };
+  const titles = {
+    low: { en: 'Low Severity', hi: 'कम खतरनाक', kn: 'ಕಡಿಮೆ ಅಪಾಯ' },
+    medium: { en: 'Medium Severity', hi: 'मध्यम खतरनाक', kn: 'ಮಧ್ಯಮ ಅಪಾಯ' },
+    high: { en: 'High Severity', hi: 'ज्यादा खतरनाक', kn: 'ಹೆಚ್ಚು ಅಪಾಯ' }
+  };
+  document.getElementById('severity-icon').textContent = icons[sev];
+  document.getElementById('severity-title').textContent = titles[sev].en;
+  document.getElementById('severity-title').className = 'severity-title ' + sev;
+  document.getElementById('severity-sub').textContent = titles[sev].hi + ' • ' + titles[sev].kn;
+
+  // Advisory text
+  const text = lang === 'hi' ? data.hindi : data.kannada;
+  document.getElementById('advisory-text').textContent = text;
+
+  // Switch buttons
+  document.getElementById('sw-hi').className = 'switch-btn' + (lang === 'hi' ? ' active' : '');
+  document.getElementById('sw-kn').className = 'switch-btn' + (lang === 'kn' ? ' active' : '');
+
+  // Audio label
+  document.getElementById('audio-lang-label').textContent = lang === 'hi'
+    ? 'हिंदी में सुनो • Listen in Hindi'
+    : 'ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ • Listen in Kannada';
+
+  document.getElementById('result-box').style.display = 'block';
+  document.getElementById('result-box').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Switch language in result without re-analyzing
+function switchResultLang(lang) {
+  if (!resultData) return;
+  selectedLang = lang;
+
+  const text = lang === 'hi' ? resultData.hindi : resultData.kannada;
+  document.getElementById('advisory-text').textContent = text;
+  document.getElementById('sw-hi').className = 'switch-btn' + (lang === 'hi' ? ' active' : '');
+  document.getElementById('sw-kn').className = 'switch-btn' + (lang === 'kn' ? ' active' : '');
+  document.getElementById('audio-lang-label').textContent = lang === 'hi'
+    ? 'हिंदी में सुनो • Listen in Hindi'
+    : 'ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ • Listen in Kannada';
+
+  // Stop current audio
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  document.getElementById('play-btn').innerHTML = '<span>▶ Play Advisory</span><span class="play-sub">सुनो • ಕೇಳಿ</span>';
+
+  // Re-fetch audio for new language from server
+  refetchAudio(lang);
+}
+
+async function refetchAudio(lang) {
+  if (!imageFile || !resultData) return;
+  try {
+    const base64 = await toBase64(imageFile);
+    const response = await fetch(SERVER_URL + '/audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+      body: JSON.stringify({ text: lang === 'hi' ? resultData.hindi : resultData.kannada, lang })
+    });
+    const data = await response.json();
+    if (data.audio_b64) {
+      const audioBytes = base64ToBytes(data.audio_b64);
+      audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+    }
+  } catch (e) { console.log('Audio refetch error:', e); }
+}
+
+function playAudio() {
+  if (!audioBlob) return;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const url = URL.createObjectURL(audioBlob);
+  currentAudio = new Audio(url);
+  currentAudio.play();
+  const btn = document.getElementById('play-btn');
+  btn.innerHTML = '<span>⏸ Playing...</span><span class="play-sub">सुन रहे हो • ಕೇಳುತ್ತಿದ್ದೀರಿ</span>';
+  currentAudio.onended = () => {
+    btn.innerHTML = '<span>▶ Play Again</span><span class="play-sub">फिर सुनो • ಮತ್ತೆ ಕೇಳಿ</span>';
+    currentAudio = null;
+  };
+}
+
+// ---- HELPERS ----
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function base64ToBytes(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function showError(msg) {
+  const e = document.getElementById('error-box');
+  e.textContent = '❌ ' + msg;
+  e.style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = false;
+}
+
+function reset() {
+  imageFile = null; resultData = null; audioBlob = null;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  document.getElementById('camera-input').value = '';
+  document.getElementById('gallery-input').value = '';
+  document.getElementById('preview-box').style.display = 'none';
+  document.getElementById('photo-actions').style.display = 'grid';
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  setStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
