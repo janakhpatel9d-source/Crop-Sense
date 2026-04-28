@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CropSense AI | फसल सलाहकार | ಬೆಳೆ ಸಲಹೆ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --green: #2d6a2d;
+    --green-light: #e8f5e9;
+    --green-mid: #4caf50;
+    --green-dark: #1b5e20;
+    --amber: #f57f17;
+    --amber-light: #fff8e1;
+    --red: #c62828;
+    --red-light: #ffebee;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e0e0e0;
+    --white: #fff;
+    --bg: #f4f6f1;
+  }
+
+  body {
+    font-family: 'Baloo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  header {
+    background: var(--green-dark);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: var(--green-mid);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .logo-text h1 { color: #fff; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+  .logo-text p { color: #a5d6a7; font-size: 0.7rem; font-family: 'Noto Sans Devanagari', sans-serif; }
+
+  .team-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    color: #c8e6c9;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  main { padding: 16px; }
+
+  /* STEPS */
+  .steps { display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 16px; }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--border); color: var(--text-muted); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+  .step-dot.active { background: var(--green-mid); color: #fff; }
+  .step-dot.done { background: var(--green-dark); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: var(--border); max-width: 40px; }
+  .step-line.done { background: var(--green-dark); }
+
+  .card { background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 16px; margin-bottom: 12px; }
+  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+  /* PHOTO SECTION */
+  .photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .photo-btn { border: 2px dashed #b0bec5; border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; background: #fafafa; position: relative; overflow: hidden; }
+  .photo-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .photo-btn .btn-icon { font-size: 28px; display: block; }
+  .photo-btn .btn-label { font-size: 0.8rem; font-weight: 600; color: var(--green-dark); display: block; }
+
+  #preview-box { display: none; border-radius: 12px; overflow: hidden; border: 2px solid var(--green-mid); position: relative; }
+  #preview-img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+
+  /* LANGUAGE BUTTONS */
+  .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lang-btn { border: 2px solid var(--border); border-radius: 12px; padding: 12px; background: #fafafa; cursor: pointer; text-align: center; font-family: 'Baloo 2', sans-serif; }
+  .lang-btn.active { border-color: var(--green-dark); background: var(--green-light); }
+
+  /* ANALYZE BUTTON */
+  .analyze-btn { width: 100%; padding: 16px; background: var(--green-dark); color: #fff; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-bottom: 12px; }
+
+  /* RESULTS */
+  #loading { display: none; text-align: center; padding: 20px; }
+  #result-box { display: none; }
+  .advisory-box { background: var(--bg); border-radius: 10px; padding: 14px; font-size: 1rem; line-height: 1.6; border-left: 4px solid var(--green-mid); margin-bottom: 12px; }
+  
+  .audio-card { background: var(--green-dark); border-radius: 14px; padding: 16px; color: white; margin-bottom: 12px; }
+  .play-btn { width: 100%; padding: 12px; background: var(--green-mid); color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">🌾</div>
+  <div class="logo-text"><h1>CropSense AI</h1><p>फसल सलाहकार • ಬೆಳೆ ಸಲಹೆಗಾರ</p></div>
+</header>
+
+<main>
+  <div class="steps">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3">3</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" id="dot4">4</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📷 Step 1 — Upload Photo</div>
+    <div class="photo-actions" id="photo-actions">
+      <div class="photo-btn">
+        <input type="file" accept="image/*" id="gallery-input">
+        <span class="btn-icon">🖼️</span><span class="btn-label">Gallery</span>
+      </div>
+      <div class="photo-btn">
+        <input type="file" accept="image/*" capture="environment" id="camera-input">
+        <span class="btn-icon">📸</span><span class="btn-label">Camera</span>
+      </div>
+    </div>
+    <div id="preview-box">
+      <img id="preview-img" src="">
+      <button style="width:100%; padding:5px; background:#333; color:white; border:none;" onclick="location.reload()">Change Photo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🗣️ Step 2 — Language</div>
+    <div class="lang-grid">
+      <button class="lang-btn active" id="lang-hi" onclick="selectLang('hi')">🇮🇳 हिंदी (Hindi)</button>
+      <button class="lang-btn" id="lang-kn" onclick="selectLang('kn')">🌻 ಕನ್ನಡ (Kannada)</button>
+    </div>
+  </div>
+
+  <button class="analyze-btn" id="analyze-btn" onclick="analyze()">🔍 Analyze Crop</button>
+
+  <div id="loading">⌛ AI Analyzing... Please wait.</div>
+
+  <div id="result-box">
+    <div class="advisory-box" id="advisory-text"></div>
+    <div class="audio-card">
+      <p style="margin-bottom:10px;">🔊 Voice Advisory Available</p>
+      <button class="play-btn" onclick="playAudio()">▶ Listen to Advisory</button>
+    </div>
+    <button class="analyze-btn" style="background:#666;" onclick="location.reload()">🔄 New Analysis</button>
+  </div>
+</main>
+
+<script>
+// HARDCODED DEMO DATA
+const DEMO_DATA = {
+    hi: "आपकी फसल में 'पत्तों के धब्बे' (Leaf Spot) की बीमारी है।\nउपाय: 20 ग्राम हल्दी को 1 लीटर पानी में मिलाकर छिड़काव करें। यह एक सफल घरेलू नुस्खा है।",
+    kn: "ನಿಮ್ಮ ಬೆಳೆಗೆ 'ಎಲೆ ಚುಕ್ಕೆ' (Leaf Spot) ರೋಗ ಬಂದಿದೆ.\nಉಪಾಯ: 20 ಗ್ರಾಂ ಅರಿಶಿನವನ್ನು 1 ಲೀಟರ್ ನೀರಿನಲ್ಲಿ ಬೆರೆಸಿ ಸಿಂಪಡಿಸಿ. ಇದು ಹಳೆಯ ಮನೆಮದ್ದು."
+};
+
+let selectedLang = 'hi';
+
+// Handle File Preview
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('preview-img').src = URL.createObjectURL(file);
+            document.getElementById('preview-box').style.display = 'block';
+            document.getElementById('photo-actions').style.display = 'none';
+            setStep(2);
+        }
+    });
+});
+
+function selectLang(lang) {
+    selectedLang = lang;
+    document.getElementById('lang-hi').classList.toggle('active', lang === 'hi');
+    document.getElementById('lang-kn').classList.toggle('active', lang === 'kn');
+}
+
+function setStep(step) {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('dot' + i);
+        if (i < step) { dot.style.background = '#1b5e20'; dot.innerHTML = '✓'; }
+        else if (i === step) { dot.style.background = '#4caf50'; }
+    }
+}
+
+function analyze() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('analyze-btn').style.display = 'none';
+    setStep(3);
+    
+    setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result-box').style.display = 'block';
+        document.getElementById('advisory-text').innerText = DEMO_DATA[selectedLang];
+        setStep(4);
+    }, 2000);
+}
+
+// BROWSER-BASED VOICE (WORKS OFFLINE ON MAC)
+function playAudio() {
+    const text = DEMO_DATA[selectedLang];
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = selectedLang === 'hi' ? 'hi-IN' : 'kn-IN';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+}
+</script>
+</body>
+</html>
